@@ -593,79 +593,8 @@ function completeValue(
     throw result;
   }
 
-  // If field type is NonNull, complete for inner type, and throw field error
-  // if result is null.
-  if (isNonNullType(returnType)) {
-    const completed = completeValue(
-      exeContext,
-      returnType.ofType,
-      fieldNodes,
-      info,
-      path,
-      result,
-    );
-    if (completed === null) {
-      throw new Error(
-        `Cannot return null for non-nullable field ${info.parentType.name}.${info.fieldName}.`,
-      );
-    }
-    return completed;
-  }
-
-  // If result value is null or undefined then return null.
-  if (result == null) {
-    return null;
-  }
-
-  // If field type is List, complete each item in the list with the inner type
-  if (isListType(returnType)) {
-    return completeListValue(
-      exeContext,
-      returnType,
-      fieldNodes,
-      info,
-      path,
-      result,
-    );
-  }
-
-  // If field type is a leaf type, Scalar or Enum, serialize to a valid value,
-  // returning null if serialization is not possible.
-  if (isLeafType(returnType)) {
-    return completeLeafValue(returnType, result);
-  }
-
-  // If field type is an abstract type, Interface or Union, determine the
-  // runtime Object type and complete for that type.
-  if (isAbstractType(returnType)) {
-    return completeAbstractValue(
-      exeContext,
-      returnType,
-      fieldNodes,
-      info,
-      path,
-      result,
-    );
-  }
-
-  // If field type is Object, execute and complete all sub-selections.
-  // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
-  if (isObjectType(returnType)) {
-    return completeObjectValue(
-      exeContext,
-      returnType,
-      fieldNodes,
-      info,
-      path,
-      result,
-    );
-  }
-
-  // istanbul ignore next (Not reachable. All possible output types have been considered)
-  invariant(
-    false,
-    'Cannot complete value of unexpected output type: ' + inspect(returnType),
-  );
+  // SMART-327 Don't revalidate the response as it came from a trusted GraphQL upstream
+  return result
 }
 
 /**
